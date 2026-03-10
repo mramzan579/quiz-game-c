@@ -1,29 +1,25 @@
 /*
  * quiz_game.c
- * Quiz Game in C
- * Add the Question struct, question bank, display function,
- * and input validation so the player can answer questions.
+ * Quiz Game
+ * Add the quiz loop that runs all questions, checks answers,
+ * gives instant feedback, and tracks the score.
  */
 
 #include <stdio.h>
-#include <ctype.h>   /* toupper() — converts a/b/c/d to A/B/C/D */
+#include <ctype.h>
 
-/* ── Constants ──────────────────────────────────────────────── */
+//Constants 
 #define TOTAL_QUESTIONS  5
 #define OPTIONS_PER_Q    4
 
-/* ── Question struct ────────────────────────────────────────── */
-/* A struct groups related data together.
-   Each question has: the text, four options, and the correct answer. */
+// ── Question struct
 typedef struct {
-    const char *question;               /* the question text       */
-    const char *options[OPTIONS_PER_Q]; /* four answer choices     */
-    char        answer;                 /* correct answer: A/B/C/D */
+    const char *question;
+    const char *options[OPTIONS_PER_Q];
+    char        answer;
 } Question;
 
-/* ── Question bank ──────────────────────────────────────────── */
-/* All 5 questions stored in one array.
-   Easy to add more questions later — just extend this array. */
+// ── Question bank
 Question quiz[TOTAL_QUESTIONS] = {
     {
         "What is the capital of France?",
@@ -56,7 +52,6 @@ Question quiz[TOTAL_QUESTIONS] = {
 /* ================================================================
    clear_input_buffer()
    Drains leftover characters from stdin after every scanf.
-   Prevents infinite loops on bad input.
 ================================================================ */
 void clear_input_buffer(void)
 {
@@ -68,7 +63,6 @@ void clear_input_buffer(void)
 /* ================================================================
    get_valid_choice()
    Keeps asking until the player enters A, B, C, or D.
-   Accepts both upper and lowercase input.
    Returns the validated uppercase character.
 ================================================================ */
 char get_valid_choice(void)
@@ -77,14 +71,14 @@ char get_valid_choice(void)
 
     while (1) {
         printf("Enter your choice (A/B/C/D): ");
-        scanf(" %c", &input);    /* space before %c skips whitespace */
+        scanf(" %c", &input);
         clear_input_buffer();
 
-        input = toupper(input);  /* convert to uppercase */
+        input = toupper(input);
 
         if (input == 'A' || input == 'B' ||
             input == 'C' || input == 'D') {
-            return input;        /* valid — return it */
+            return input;
         }
 
         printf("  Invalid choice! Please enter A, B, C, or D.\n\n");
@@ -93,31 +87,72 @@ char get_valid_choice(void)
 
 /* ================================================================
    display_question()
-   Prints one question with its four options labeled A to D.
-   Parameters:
-     index — question number (0-based, shown as 1-based to player)
-     q     — pointer to the Question to display
+   Prints one question with its four labeled options.
 ================================================================ */
 void display_question(int index, const Question *q)
 {
     int  i;
-    char label = 'A';   /* starting label — goes A, B, C, D */
+    char label = 'A';
 
     printf("\nQuestion %d of %d:\n", index + 1, TOTAL_QUESTIONS);
     printf("----------------------------------------\n");
     printf("%s\n\n", q->question);
 
-    /* Loop through all 4 options and print each with its letter */
     for (i = 0; i < OPTIONS_PER_Q; i++) {
         printf("  %c) %s\n", label + i, q->options[i]);
     }
     printf("\n");
 }
 
-/* ── Main function ──────────────────────────────────────────────── */
+/* ================================================================
+   run_quiz()
+   Loops through every question in the quiz array.
+   For each question:
+     - displays it
+     - reads the player's answer
+     - checks if it is correct
+     - prints instant feedback
+     - shows the running score
+   Returns the total number of correct answers.
+================================================================ */
+int run_quiz(void)
+{
+    int  i;
+    int  score = 0;   /* counts correct answers */
+    char choice;
+
+    for (i = 0; i < TOTAL_QUESTIONS; i++) {
+
+        /* Show the question */
+        display_question(i, &quiz[i]);
+
+        // Get a valid answer from the player
+        choice = get_valid_choice();
+
+        //Check the answer and give instant feedback 
+        if (choice == quiz[i].answer) {
+            printf("\n  Correct! Well done.\n");
+            score++;   // only increments on correct answer 
+        } else {
+            //Show what the correct answer was 
+            printf("\n  Wrong! The correct answer was %c) %s\n",
+                   quiz[i].answer,
+                   quiz[i].options[quiz[i].answer - 'A']);
+        }
+
+        // Show running score after every question 
+        printf("  Score so far: %d / %d\n", score, i + 1);
+    }
+
+    return score;
+}
+
+// ── Main
 int main(void)
 {
-    //Welcome banner
+    int score = 0;
+
+    //Welcome banner 
     printf("========================================\n");
     printf("              QUIZ GAME                 \n");
     printf("========================================\n");
@@ -125,11 +160,13 @@ int main(void)
     printf("  Each question has 4 options: A B C D.\n");
     printf("========================================\n");
 
-    //Temporary: shows first question to test display function
-    display_question(0, &quiz[0]);
-    get_valid_choice();
+    /* Run the full quiz and get the final score */
+    score = run_quiz();
 
-    printf("\n[DEBUG] Display and input validation working.\n");
+    //Temporary score print — proper summary added next commit 
+    printf("\n----------------------------------------\n");
+    printf("  You scored %d out of %d!\n", score, TOTAL_QUESTIONS);
+    printf("----------------------------------------\n");
 
     return 0;
 }
